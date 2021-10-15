@@ -1,0 +1,11 @@
+name = "serverless-api"
+type = "javascript"
+
+account_id = ""
+workers_dev = true
+route = ""
+zone_id = ""
+compatibility_date = "2021-10-14"
+kv_namespaces = [
+  { binding = "SOCIAL_MEDIA", preview_id = "390a9231108441918ffb73bda82efdb5", id="390a9231108441918ffb73bda82efdb5"}
+]
