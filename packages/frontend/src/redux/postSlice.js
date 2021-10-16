@@ -46,7 +46,9 @@ export const postSlice = createSlice({
     },
     [getPosts.fulfilled]: (state, action) => {
       state.status = 'success';
-      state.posts = action.payload.posts;
+      const posts = action.payload.posts;
+      posts.sort((aPost, bPost) => compare(aPost?.order, bPost?.order));
+      state.posts = posts;
     },
     [getPosts.rejected]: (state, action) => {
       state.status = 'failed';
@@ -66,3 +68,13 @@ export const postSlice = createSlice({
 
 export default postSlice.reducer;
 export const { updateLike } = postSlice.actions;
+const compare = (a, b) => {
+  if (a > b) {
+    return -1;
+  }
+  if (a < b) {
+    return 1;
+  }
+  // a must be equal to b
+  return 0;
+};

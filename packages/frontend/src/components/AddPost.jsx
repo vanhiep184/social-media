@@ -119,6 +119,7 @@ export default function AddPost() {
     const post = {
       posts: [...posts].concat({
         _id: Math.random().toString(),
+        order: posts.length + 1,
         title: postTitle,
         username: 'coolguy123',
         content: postText,
