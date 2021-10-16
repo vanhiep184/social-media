@@ -17,11 +17,12 @@ export default function AddPost() {
   const { status, posts } = useSelector((state) => state.post);
   const theme = useTheme();
   const [postText, setPostText] = useState('');
+  const [postTitle, setPostTitle] = useState('');
   const handleAddPost = async () => {
     const post = {
       posts: [...posts].concat({
         _id: Math.random().toString(),
-        title: 'My First Post',
+        title: postTitle,
         username: 'coolguy123',
         content: postText,
         images: [
@@ -37,6 +38,7 @@ export default function AddPost() {
     if (data) {
       dispatch(getPosts());
       setPostText('');
+      setPostTitle('');
     }
   };
   return (
@@ -50,13 +52,24 @@ export default function AddPost() {
         <Grid item flexGrow="1">
           <Box padding=".5rem 0">
             <Input
+              value={postTitle}
+              onChange={(e) => setPostTitle(e.target.value)}
+              rows="1"
+              disableUnderline
+              type="text"
+              placeholder="Title"
+              sx={{ width: '100%' }}
+            />
+          </Box>
+          <Box padding=".5rem 0">
+            <Input
               value={postText}
               onChange={(e) => setPostText(e.target.value)}
               multiline
-              rows="2"
+              rows="5"
               disableUnderline
               type="text"
-              placeholder="What's up?"
+              placeholder="Write something?"
               sx={{ width: '100%' }}
             />
           </Box>
@@ -69,12 +82,13 @@ export default function AddPost() {
           <Box textAlign="right" paddingBottom=".5rem" paddingTop=".5rem" borderTop="1px solid #ccc">
             <Button
               onClick={handleAddPost}
-              disabled={postText.length === 0}
+              disabled={postTitle.length === 0}
               variant="contained"
               color="primary"
               sx={{
-                borderRadius: theme.shape.borderRadius,
+                borderRadius: '10px',
                 fontSize: '12px',
+                minWidth: '100px',
               }}
             >
               Post
