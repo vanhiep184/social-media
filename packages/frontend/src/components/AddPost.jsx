@@ -1,23 +1,120 @@
-import { Button, Grid, Input, Avatar } from '@mui/material';
-
-import { styled } from '@mui/material/styles';
-import { Box, useTheme } from '@mui/system';
-import React, { useState } from 'react';
+import { Button, Grid, Input, Avatar, Card } from '@mui/material';
+import { Box } from '@mui/system';
+import React, { useState, useEffect } from 'react';
+import { useDropzone } from 'react-dropzone';
 import { useDispatch, useSelector } from 'react-redux';
 import { addPost } from '../api';
 import { getPosts } from '../redux/postSlice';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { storage } from '../storage_initialize';
+// Based on the default React Dropzone image thumbnail example
+// The `thumbButton` style positions the edit button in the bottom right corner of the thumbnail
+const thumbsContainer = {
+  display: 'flex',
+  flexDirection: 'row',
+  flexWrap: 'wrap',
+  marginTop: 16,
+};
 
-import PhotoCamera from '@mui/icons-material/PhotoCamera';
-import IconButton from '@mui/material/IconButton';
-const IInput = styled('input')({
-  display: 'none',
-});
+const thumb = {
+  position: 'relative',
+  display: 'inline-flex',
+  borderRadius: 2,
+  border: '1px solid #eaeaea',
+  marginBottom: 8,
+  marginRight: 8,
+  width: 100,
+  height: 100,
+  padding: 4,
+  boxSizing: 'border-box',
+};
+
+const thumbInner = {
+  display: 'flex',
+  minWidth: 0,
+  overflow: 'hidden',
+};
+
+const img = {
+  display: 'block',
+  width: 'auto',
+  height: '100%',
+};
+
 export default function AddPost() {
   const dispatch = useDispatch();
-  const { status, posts } = useSelector((state) => state.post);
-  const theme = useTheme();
+  const { posts } = useSelector((state) => state.post);
+
+  const [files, setFiles] = useState([]);
+  const [images, setImages] = useState([]);
   const [postText, setPostText] = useState('');
   const [postTitle, setPostTitle] = useState('');
+  const { getRootProps, getInputProps } = useDropzone({
+    accept: 'image/*',
+    onDrop: (acceptedFiles) => {
+      setFiles(
+        [...files]?.concat(
+          acceptedFiles.map((file) => {
+            const editedFile = Object.assign(file, {
+              preview: URL.createObjectURL(file),
+            });
+            fileUploader(editedFile);
+            return editedFile;
+          })
+        )
+      );
+    },
+  });
+
+  const fileUploader = (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', 'react-blog');
+    formData.append('cloud_name', 'dzqjqxzjw');
+    // Create the file metadata
+    /** @type {any} */
+    const metadata = {
+      contentType: 'image/jpeg',
+    };
+
+    // Upload file and metadata to the object 'images/mountains.jpg'
+    const storageRef = ref(storage, 'images/' + file.name);
+    const uploadTask = uploadBytesResumable(storageRef, file, metadata);
+
+    // Listen for state changes, errors, and completion of the upload.
+    uploadTask.on(
+      'state_changed',
+      (snapshot) => {
+        // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
+        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        console.log('Upload is ' + progress + '% done');
+        // switch (snapshot.state) {
+        //   case 'paused':
+        //     console.log('Upload is paused');
+        //     break;
+        //   case 'running':
+        //     console.log('Upload is running');
+        //     break;
+        // }
+      },
+      (error) => {
+        console.error(error);
+      },
+      () => {
+        // Upload completed successfully, now we can get the download URL
+        getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+          console.log('File available at', downloadURL);
+          setImages([
+            ...images,
+            {
+              url: downloadURL,
+              alt: file.name,
+            },
+          ]);
+        });
+      }
+    );
+  };
   const handleAddPost = async () => {
     const post = {
       posts: [...posts].concat({
@@ -25,12 +122,7 @@ export default function AddPost() {
         title: postTitle,
         username: 'coolguy123',
         content: postText,
-        images: [
-          {
-            url: 'https://picsum.photos/200/300',
-            alt: 'A picture of a cat',
-          },
-        ],
+        images: images,
         createdAt: new Date().toISOString(),
       }),
     };
@@ -41,6 +133,22 @@ export default function AddPost() {
       setPostTitle('');
     }
   };
+
+  const thumbs = files.map((file, index) => (
+    <div style={thumb} key={file.name + index}>
+      <div style={thumbInner}>
+        <img src={file.preview} style={img} alt="" />
+      </div>
+    </div>
+  ));
+  useEffect(
+    () => () => {
+      // Make sure to revoke the Object URL to avoid memory leaks
+      files.forEach((file) => URL.revokeObjectURL(file.preview));
+    },
+    [files]
+  );
+
   return (
     <Box padding="1rem 1rem 0 1rem" border="1px solid #ccc" borderRadius="8px" margin="16px 4px 8px">
       <Grid container>
@@ -73,12 +181,32 @@ export default function AddPost() {
               sx={{ width: '100%' }}
             />
           </Box>
-          <label htmlFor="icon-button-file">
-            <IInput accept="image/*" id="icon-button-file" type="file" />
-            <IconButton color="primary" aria-label="upload picture" component="span">
-              <PhotoCamera />
-            </IconButton>
-          </label>
+          <Card
+            className="container"
+            {...getRootProps({ className: 'dropzone' })}
+            elevation={0}
+            style={{
+              borderRadius: '8px',
+              border: '1px dashed #ccc',
+              backgroundColor: '#f9f9f9',
+              height: '100px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <input {...getInputProps()} />
+            <p
+              style={{
+                textAlign: 'center',
+              }}
+            >
+              Drag 'n' drop some files here, or click to select files
+            </p>
+          </Card>
+          <Card style={thumbsContainer} elevation={0}>
+            {thumbs}
+          </Card>
           <Box textAlign="right" paddingBottom=".5rem" paddingTop=".5rem" borderTop="1px solid #ccc">
             <Button
               onClick={handleAddPost}
