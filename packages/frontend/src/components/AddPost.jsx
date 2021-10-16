@@ -49,6 +49,7 @@ export default function AddPost() {
   const [images, setImages] = useState([]);
   const [postText, setPostText] = useState('');
   const [postTitle, setPostTitle] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
   const { getRootProps, getInputProps } = useDropzone({
     accept: 'image/*',
     onDrop: (acceptedFiles) => {
@@ -67,6 +68,7 @@ export default function AddPost() {
   });
 
   const fileUploader = (file) => {
+    setIsUploading(true);
     const formData = new FormData();
     formData.append('file', file);
     formData.append('upload_preset', 'react-blog');
@@ -99,11 +101,13 @@ export default function AddPost() {
       },
       (error) => {
         console.error(error);
+        setIsUploading(false);
       },
       () => {
         // Upload completed successfully, now we can get the download URL
         getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
           console.log('File available at', downloadURL);
+          setIsUploading(false);
           setImages([
             ...images,
             {
@@ -132,6 +136,7 @@ export default function AddPost() {
       dispatch(getPosts());
       setPostText('');
       setPostTitle('');
+      setFiles([]);
     }
   };
 
@@ -211,16 +216,17 @@ export default function AddPost() {
           <Box textAlign="right" paddingBottom=".5rem" paddingTop=".5rem" borderTop="1px solid #ccc">
             <Button
               onClick={handleAddPost}
-              disabled={postTitle.length === 0}
+              disabled={postTitle.length === 0 || isUploading}
+              loading={isUploading}
               variant="contained"
               color="primary"
               sx={{
                 borderRadius: '10px',
                 fontSize: '12px',
-                minWidth: '100px',
+                minWidth: '120px',
               }}
             >
-              Post
+              {isUploading ? 'Loading...' : 'Post'}
             </Button>
           </Box>
         </Grid>

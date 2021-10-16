@@ -38,6 +38,7 @@ const defaultData = {
       _id: 20201001,
       title: 'My First Post',
       username: 'coolguy123',
+      order: 1,
       content: "Hey Y'all!",
       images: [
         {
@@ -45,12 +46,13 @@ const defaultData = {
           alt: 'A picture of a cat',
         },
       ],
-      createdAt: '2020-01-01T00:00:00.000Z',
+      createdAt: new Date().toISOString(),
     },
     {
       _id: 20201002,
       title: 'Story About my Dogs',
       username: 'kn0thing',
+      order: 2,
       content: 'So the other day I was in the yard, and...',
       images: [
         {
@@ -62,7 +64,7 @@ const defaultData = {
           alt: 'A picture of a cat',
         },
       ],
-      createdAt: '2020-01-01T00:00:00.000Z',
+      createdAt: new Date().toISOString(),
     },
   ],
 }
